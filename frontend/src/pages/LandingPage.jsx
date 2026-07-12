@@ -25,7 +25,11 @@ const LandingPage = () => {
   }
 
   const handleAnalyzeCTA = () => {
-    navigate('/analyze')
+    if (!user) {
+      setOpenAuthModal(true)
+    } else {
+      navigate('/analyze')
+    }
   }
 
   return (
