@@ -4,6 +4,27 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 /**
+ * Calls Gemini with automatic retry on transient overload (503) errors,
+ * using exponential backoff.
+ */
+const generateWithRetry = async (model, requestConfig, retries = 3, delayMs = 2000) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await model.generateContent(requestConfig);
+    } catch (error) {
+      const isOverloaded = error.message?.includes('503') || error.message?.includes('overloaded');
+      if (isOverloaded && attempt < retries) {
+        console.warn(`Gemini overloaded, retrying in ${delayMs}ms (attempt ${attempt}/${retries})...`);
+        await new Promise((res) => setTimeout(res, delayMs));
+        delayMs *= 2; // exponential backoff: 2s, 4s, 8s...
+      } else {
+        throw error;
+      }
+    }
+  }
+};
+
+/**
  * Analyze a resume against a job description using Gemini
  */
 export const analyzeResume = async (resumeText, jobDescription) => {
@@ -52,7 +73,7 @@ IMPORTANT RULES:
 
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-  const result = await model.generateContent({
+  const result = await generateWithRetry(model, {
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.2,
@@ -106,7 +127,7 @@ Return ONLY valid JSON in this exact format:
 
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-  const result = await model.generateContent({
+  const result = await generateWithRetry(model, {
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.7,
