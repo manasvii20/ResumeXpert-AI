@@ -10,8 +10,8 @@ import {
   X,
   Download,
 } from 'lucide-react';
-import axios from 'axios';
-import { BASE_URL, API_PATHS } from '../utils/apiPaths';
+import axiosInstance from '../utils/axiosInstance';
+import { API_PATHS } from '../utils/apiPaths';
 import toast, { Toaster } from 'react-hot-toast';
 import ATSScoreCard from '../components/ATSScoreCard';
 import KeywordSuggestions from '../components/KeywordSuggestions';
@@ -85,8 +85,8 @@ const ResumeAnalyzer = () => {
         formData.append('resumeFile', selectedFile);
         formData.append('jobDescription', jobDescription);
 
-        response = await axios.post(
-          `${BASE_URL}${API_PATHS.AI.ANALYZE_RESUME}`,
+        response = await axiosInstance.post(
+          API_PATHS.AI.ANALYZE_RESUME,
           formData,
           {
             headers: { 'Content-Type': 'multipart/form-data' },
@@ -94,8 +94,8 @@ const ResumeAnalyzer = () => {
           }
         );
       } else {
-        response = await axios.post(
-          `${BASE_URL}${API_PATHS.AI.ANALYZE_RESUME}`,
+        response = await axiosInstance.post(
+          API_PATHS.AI.ANALYZE_RESUME,
           { resumeText, jobDescription },
           { timeout: 60000 }
         );

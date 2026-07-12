@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { analyzeResumeController, rewriteBulletController } from '../controllers/aiController.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const aiRouter = express.Router();
 
@@ -17,10 +18,8 @@ const upload = multer({
   },
 });
 
-// POST /api/ai/analyze-resume — full resume analysis
-aiRouter.post('/analyze-resume', upload.single('resumeFile'), analyzeResumeController);
+aiRouter.post('/analyze-resume', protect, upload.single('resumeFile'), analyzeResumeController);
 
-// POST /api/ai/rewrite-bullet — single bullet point rewrite
-aiRouter.post('/rewrite-bullet', rewriteBulletController);
+aiRouter.post('/rewrite-bullet', protect, rewriteBulletController);
 
 export default aiRouter;
